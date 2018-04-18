@@ -2,6 +2,7 @@ import chainer
 import chainer.links as L
 import chainer.functions as F
 from chainer import initializers
+from chainer.backends import cuda
 
 
 class GRL(chainer.Function):
@@ -18,7 +19,8 @@ class GRL(chainer.Function):
 
 
 class Encoder(chainer.Chain):
-    def __init__(self):
+    def __init__(self, pixel_mean=0):
+        self.pixel_mean = pixel_mean
         super().__init__()
         init_w = initializers.Normal(0.1)
         init_b = initializers.Constant(0.1)
@@ -27,6 +29,9 @@ class Encoder(chainer.Chain):
             self.conv2 = L.Convolution2D(32, 48, 5, pad=2, initialW=init_w, initial_bias=init_b)
 
     def __call__(self, x):
+        with cuda.get_device_from_array(x):
+            pixel_mean = cuda.to_gpu(self.pixel_mean)
+        x -= pixel_mean
         h = F.max_pooling_2d(F.relu(self.conv1(x)), 2, stride=2)
         h = F.max_pooling_2d(F.relu(self.conv2(h)), 2, stride=2)
         h = F.reshape(h, (-1, 7*7*48))

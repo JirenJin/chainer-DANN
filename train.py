@@ -20,7 +20,7 @@ from updater import Updater
 
 # TODO(jin): compute the exact mean values for all datasets
 mean_dict = {
-    'mnist_mnistm': np.array([0.28999965, 0.29184186, 0.26908532]).reshape(3, 1, 1),
+    'mnist_mnistm': np.array([0.28999965, 0.29184186, 0.26908532]).reshape(1, 3, 1, 1),
 }
 
 
@@ -31,19 +31,6 @@ def prepare_data(args):
     print("Begin loading target domain")
     target = datasets.Domain(args.target)
     print("Finish loading target domain")
-    pixel_mean = mean_dict[args.source + '_' + args.target]
-    train_transform = utils.transform_factory(args.size, pixel_mean,
-                                              args.grayscale, args.scale,
-                                              args.crop_size, args.mirror,
-                                              is_train=True)
-    test_transform = utils.transform_factory(args.size, pixel_mean,
-                                             args.grayscale, args.scale,
-                                             args.crop_size, args.mirror,
-                                             is_train=False)
-    source.train = TransformDataset(source.train, train_transform)
-    target.train = TransformDataset(target.train, train_transform)
-    source.test = TransformDataset(source.test, test_transform)
-    target.test = TransformDataset(target.test, test_transform)
     s_train = utils.data2iterator(source.train, args.batchsize, is_train=True,
                                   multiprocess=args.multiprocess)
     t_train = utils.data2iterator(target.train, args.batchsize, is_train=True,
@@ -60,7 +47,8 @@ def main(args):
     s_train, t_train, s_test, t_test = prepare_data(args)
     print("Finish data preparation.")
     print("Begin building models.")
-    encoder = mnistm.Encoder()
+    pixel_mean = mean_dict[args.source + '_' + args.target]
+    encoder = mnistm.Encoder(pixel_mean)
     classifier = mnistm.Classifier()
     do_classifier = mnistm.DomainClassifier()
     print("Finish building models.")
@@ -83,7 +71,7 @@ def main(args):
         trainer.extend(
             extensions.snapshot_object(opt.target, filename=name),
             trigger=MaxValueTrigger('acc_t', (args.interval, args.unit)))
-    trainer.extend(extensions.Evaluator(s_test, target_model,
+    trainer.extend(extensions.Evaluator(t_test, target_model,
                                         device=args.device), trigger=(args.interval, args.unit))
     trainer.extend(extensions.PrintReport([args.unit, *loss_list, 'acc_s', 'acc_t', 'elapsed_time']))
     trainer.extend(extensions.PlotReport([*loss_list], x_key=args.unit, file_name='loss.png', trigger=(args.interval, args.unit)))

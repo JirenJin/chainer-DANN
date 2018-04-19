@@ -13,6 +13,7 @@ class Updater(BaseDAUpdater):
         self.grl_max_iter = args.grl_max_iter
         self.max_iter = args.max_iter
         self.do_weight = args.do_weight
+        self.lr = args.lr
         # source-only training or DANN training
         self.training_mode = args.training_mode
         self.enc = optimizers['encoder'].target
@@ -26,9 +27,9 @@ class Updater(BaseDAUpdater):
         # adjust the learning rate and scale for GRL
         xp = self.enc.xp
         p1 = float(self.iteration) / self.grl_max_iter
-        scale = min(2. / (1. + xp.exp(-10. * p1, dtype='f')) - 1, 1)
+        scale = 2. / (1. + xp.exp(-10. * p1, dtype='f')) - 1
         p2 = float(self.iteration) / self.max_iter
-        lr = 0.01 / (1. + 10 * p2)**0.75
+        lr = self.lr / (1. + 10 * p2)**0.75
         for opt in self.optimizers.values():
             # I think this is equal to `opt.lr = lr`
             # but this is the safer way to make sure lr is changed
@@ -53,8 +54,8 @@ class Updater(BaseDAUpdater):
             s_do_logits = self.do_cla(s_encoding, scale)
             t_do_logits = self.do_cla(t_encoding, scale)
 
-            s_do_labels = Variable(xp.ones(s_do_logits.shape, dtype='i'))
-            t_do_labels = Variable(xp.zeros(t_do_logits.shape, dtype='i'))
+            s_do_labels = Variable(xp.zeros(s_do_logits.shape, dtype='i'))
+            t_do_labels = Variable(xp.ones(t_do_logits.shape, dtype='i'))
 
             loss_do_cla = F.sigmoid_cross_entropy(s_do_logits, s_do_labels)
             loss_do_cla += F.sigmoid_cross_entropy(t_do_logits, t_do_labels)

@@ -33,14 +33,18 @@ def parse_args(args):
 
 
 class LossAndAccuracy(chainer.Chain):
-    def __init__(self, encoder, classifier):
+    def __init__(self, encoder, classifier, bottleneck=None):
         super().__init__()
         with self.init_scope():
             self.encoder = encoder
             self.classifier = classifier
+            self.bottleneck = bottleneck
 
     def __call__(self, x, t):
-        logits = self.classifier(self.encoder(x))
+        encoding = self.encoder(x)
+        if self.bottleneck is not None:
+            encoding = self.bottleneck(encoding)
+        logits = self.classifier(encoding)
         loss = F.softmax_cross_entropy(logits, t)
         accuracy = F.accuracy(logits, t)
         chainer.report({'loss_cla_t': loss})
@@ -91,7 +95,7 @@ def prepare_dir(args):
 
 
 def train_transform_office(in_data):
-    mean = np.load('imagenet_mean.npy').reshape(3, 256, 256)
+    mean = np.load('imagenet_mean.npy').reshape(3, 256, 256).astype('f')
     crop_size = 227
 
     img, label = in_data
@@ -105,7 +109,7 @@ def train_transform_office(in_data):
 
 
 def test_transform_office(in_data):
-    mean = np.load('imagenet_mean.npy').reshape(3, 256, 256)
+    mean = np.load('imagenet_mean.npy').reshape(3, 256, 256).astype('f')
     crop_size = 227
 
     img, label = in_data

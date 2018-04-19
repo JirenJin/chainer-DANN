@@ -11,6 +11,7 @@ from chainercv.transforms import random_crop
 from chainercv.transforms import random_flip
 from chainercv.transforms import resize
 import yaml
+import numpy as np
 
 
 def setup_optimizer(model, opt_name, lr):
@@ -86,3 +87,30 @@ def prepare_dir(args):
     with open(args_path, 'w') as f:
         json.dump(vars(args), f)
     return out_path
+
+
+
+def train_transform_office(in_data):
+    mean = np.load('imagenet_mean.npy').reshape(3, 256, 256)
+    crop_size = 227
+
+    img, label = in_data
+    # subtract the mean file
+    img = img - mean
+    # random crop image to 227x227
+    img = random_crop(img, (crop_size, crop_size))
+    # random mirror the image
+    img = random_flip(img, x_random=True)
+    return img, label
+
+
+def test_transform_office(in_data):
+    mean = np.load('imagenet_mean.npy').reshape(3, 256, 256)
+    crop_size = 227
+
+    img, label = in_data
+    # subtract the mean file
+    img = img - mean
+    # center crop image to 227x227
+    img = center_crop(img, (crop_size, crop_size))
+    return img, label

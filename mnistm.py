@@ -45,12 +45,12 @@ class Classifier(chainer.Chain):
         init_b = initializers.Constant(0.1)
         with self.init_scope():
             self.fc1 = L.Linear(7*7*48, 100, initialW=init_w, initial_bias=init_b)
-            # self.fc2 = L.Linear(100, 100, initialW=init_w, initial_bias=init_b)
+            self.fc2 = L.Linear(100, 100, initialW=init_w, initial_bias=init_b)
             self.fc3 = L.Linear(100, 10, initialW=init_w, initial_bias=init_b)
 
     def __call__(self, x):
         h = F.relu(self.fc1(x))
-        # h = F.relu(self.fc2(h))
+        h = F.relu(self.fc2(h))
         h = self.fc3(h)
         return h
 

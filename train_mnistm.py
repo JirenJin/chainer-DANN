@@ -15,7 +15,7 @@ import mnistm
 import utils
 from utils import setup_optimizer
 from utils import LossAndAccuracy
-from updater import Updater
+from mnistm_updater import Updater
 
 
 # TODO(jin): compute the exact mean values for all datasets

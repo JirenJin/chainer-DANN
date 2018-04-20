@@ -47,7 +47,7 @@ def main(args):
     s_train, t_train, s_test, t_test = prepare_data(args)
     print("Finish data preparation.")
     print("Begin building models.")
-    pixel_mean = mean_dict[args.source + '_' + args.target]
+    pixel_mean = mean_dict[args.source + '_' + args.target].astype('f')
     encoder = mnistm.Encoder(pixel_mean)
     classifier = mnistm.Classifier()
     do_classifier = mnistm.DomainClassifier()

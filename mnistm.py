@@ -31,8 +31,8 @@ class Encoder(chainer.Chain):
     def __call__(self, x):
         with cuda.get_device_from_array(x):
             pixel_mean = cuda.to_gpu(self.pixel_mean)
-        x -= pixel_mean
-        h = F.max_pooling_2d(F.relu(self.conv1(x)), 2, stride=2)
+        h = x - pixel_mean
+        h = F.max_pooling_2d(F.relu(self.conv1(h)), 2, stride=2)
         h = F.max_pooling_2d(F.relu(self.conv2(h)), 2, stride=2)
         h = F.reshape(h, (-1, 7*7*48))
         return h

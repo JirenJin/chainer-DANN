@@ -27,13 +27,13 @@ class Updater(BaseDAUpdater):
         # adjust the learning rate and scale for GRL
         xp = self.enc.xp
         p1 = float(self.iteration) / self.grl_max_iter
-        scale = 2. / (1. + xp.exp(-10. * p1, dtype='f')) - 1
-        p2 = float(self.iteration) / self.max_iter
-        lr = self.lr / (1. + 10 * p2)**0.75
-        for opt in self.optimizers.values():
-            # I think this is equal to `opt.lr = lr`
-            # but this is the safer way to make sure lr is changed
-            opt.hyperparam.lr = lr
+        scale = min(2. / (1. + xp.exp(-10. * p1, dtype='f')) - 1, 0.5)
+        # p2 = float(self.iteration) / self.max_iter
+        # lr = self.lr / (1. + 10 * p2)**0.75
+        # for opt in self.optimizers.values():
+            # # I think this is equal to `opt.lr = lr`
+            # # but this is the safer way to make sure lr is changed
+            # opt.hyperparam.lr = lr
 
         # get a minibatch
         s_batch = next(self.s_iter)
